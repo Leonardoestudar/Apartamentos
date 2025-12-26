@@ -1,0 +1,1174 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Organizador de Apartamentos</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Arial', sans-serif;
+            background-color: #e3e5e8;
+            padding: 20px;
+            color: #333;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        header {
+            background: #fff;
+            padding: 25px;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            margin-bottom: 30px;
+        }
+
+        .header-top {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .filters {
+            background: #f5f7f9;
+            padding: 20px;
+            border-radius: 8px;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-top: 15px;
+        }
+
+        .filter-group {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .filter-label {
+            font-size: 13px;
+            font-weight: 600;
+            color: #555;
+        }
+
+        select.filter-select {
+            padding: 8px 12px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            font-size: 14px;
+            background: white;
+            cursor: pointer;
+        }
+
+        .filter-buttons {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .filter-btn {
+            padding: 6px 12px;
+            border: 2px solid #ddd;
+            background: white;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 13px;
+            transition: all 0.3s;
+        }
+
+        .filter-btn:hover {
+            border-color: #3498db;
+            transform: none;
+            box-shadow: none;
+        }
+
+        .filter-btn.active {
+            background: #3498db;
+            color: white;
+            border-color: #3498db;
+        }
+
+        .clear-filters {
+            background: #e74c3c;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 13px;
+            font-weight: 600;
+        }
+
+        .clear-filters:hover {
+            background: #c0392b;
+            transform: none;
+            box-shadow: none;
+        }
+
+        h1 {
+            color: #2c3e50;
+            font-size: 28px;
+        }
+
+        .header-actions {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        button {
+            background: #3498db;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+
+        button:hover {
+            background: #2980b9;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(52, 152, 219, 0.3);
+        }
+
+        .btn-add {
+            background: #27ae60;
+        }
+
+        .btn-add:hover {
+            background: #229954;
+        }
+
+        .btn-export {
+            background: #f39c12;
+        }
+
+        .btn-export:hover {
+            background: #e67e22;
+        }
+
+        .btn-import {
+            background: #9b59b6;
+        }
+
+        .btn-import:hover {
+            background: #8e44ad;
+        }
+
+        .apartments-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+            gap: 25px;
+            margin-top: 20px;
+        }
+
+        .apartment-card {
+            background: #f9f9f9;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+            transition: all 0.3s;
+            cursor: pointer;
+        }
+
+        .apartment-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 20px rgba(0,0,0,0.15);
+        }
+
+        .card-image {
+            width: 100%;
+            height: 200px;
+            object-fit: cover;
+            background: #ddd;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #999;
+            font-size: 48px;
+        }
+
+        .card-content {
+            padding: 20px;
+        }
+
+        .card-title {
+            font-size: 20px;
+            font-weight: bold;
+            color: #2c3e50;
+            margin-bottom: 8px;
+        }
+
+        .card-address {
+            color: #7f8c8d;
+            font-size: 14px;
+            margin-bottom: 12px;
+        }
+
+        .card-info {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 12px;
+            font-size: 14px;
+            color: #555;
+        }
+
+        .card-price {
+            font-size: 16px;
+            font-weight: bold;
+            color: #27ae60;
+            margin-bottom: 8px;
+        }
+
+        .card-icons {
+            display: flex;
+            gap: 10px;
+            margin-top: 12px;
+        }
+
+        .icon {
+            font-size: 24px;
+        }
+
+        .icon-favorite {
+            color: #f4c542;
+        }
+
+        .icon-visited {
+            color: #4caf50;
+        }
+
+        .stars {
+            display: flex;
+            gap: 3px;
+            margin-top: 8px;
+        }
+
+        .star {
+            font-size: 18px;
+            color: #ddd;
+            cursor: pointer;
+        }
+
+        .star.filled {
+            color: #f4c542;
+        }
+
+        /* Modal */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.6);
+            z-index: 1000;
+            overflow-y: auto;
+            padding: 20px;
+        }
+
+        .modal.active {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-content {
+            background: #fefefe;
+            border-radius: 12px;
+            padding: 30px;
+            max-width: 600px;
+            width: 100%;
+            max-height: 90vh;
+            overflow-y: auto;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+        }
+
+        .modal-title {
+            font-size: 24px;
+            color: #2c3e50;
+        }
+
+        .close-btn {
+            font-size: 28px;
+            cursor: pointer;
+            color: #95a5a6;
+            background: none;
+            border: none;
+            padding: 0;
+            width: 30px;
+            height: 30px;
+        }
+
+        .close-btn:hover {
+            color: #e74c3c;
+            transform: none;
+            box-shadow: none;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 6px;
+            color: #555;
+            font-weight: 600;
+            font-size: 14px;
+        }
+
+        input, textarea, select {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            font-size: 14px;
+            font-family: inherit;
+        }
+
+        input:focus, textarea:focus, select:focus {
+            outline: none;
+            border-color: #3498db;
+        }
+
+        textarea {
+            resize: vertical;
+            min-height: 80px;
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+
+        .modal-actions {
+            display: flex;
+            gap: 10px;
+            margin-top: 25px;
+            justify-content: flex-end;
+        }
+
+        .btn-cancel {
+            background: #95a5a6;
+        }
+
+        .btn-cancel:hover {
+            background: #7f8c8d;
+        }
+
+        .btn-delete {
+            background: #e74c3c;
+        }
+
+        .btn-delete:hover {
+            background: #c0392b;
+        }
+
+        /* Detail Modal */
+        .detail-images {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+            gap: 10px;
+            margin: 20px 0;
+        }
+
+        .detail-image {
+            width: 100%;
+            height: 120px;
+            object-fit: cover;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: transform 0.3s;
+        }
+
+        .detail-image:hover {
+            transform: scale(1.05);
+        }
+
+        .detail-main-image {
+            width: 100%;
+            height: 300px;
+            object-fit: cover;
+            border-radius: 12px;
+            margin-bottom: 20px;
+        }
+
+        .detail-info {
+            margin: 15px 0;
+        }
+
+        .detail-label {
+            font-weight: bold;
+            color: #555;
+            margin-bottom: 5px;
+        }
+
+        .detail-value {
+            color: #333;
+            margin-bottom: 15px;
+        }
+
+        .detail-link {
+            color: #3498db;
+            text-decoration: none;
+            font-weight: 600;
+        }
+
+        .detail-link:hover {
+            text-decoration: underline;
+        }
+
+        .detail-icons {
+            display: flex;
+            gap: 15px;
+            margin: 20px 0;
+            font-size: 32px;
+        }
+
+        .btn-toggle {
+            background: none;
+            border: 2px solid #ddd;
+            color: #999;
+            padding: 10px 20px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn-toggle.active-favorite {
+            border-color: #f4c542;
+            color: #f4c542;
+        }
+
+        .btn-toggle.active-visited {
+            border-color: #4caf50;
+            color: #4caf50;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: #95a5a6;
+        }
+
+        .empty-state-icon {
+            font-size: 64px;
+            margin-bottom: 20px;
+        }
+
+        input[type="file"] {
+            padding: 8px;
+        }
+
+        .image-upload-preview {
+            margin-top: 10px;
+            max-width: 100%;
+            height: auto;
+            border-radius: 8px;
+        }
+
+        @media (max-width: 768px) {
+            .apartments-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .form-row {
+                grid-template-columns: 1fr;
+            }
+
+            header {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .header-actions {
+                justify-content: stretch;
+            }
+
+            .header-actions button {
+                flex: 1;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <div class="header-top">
+                <h1>🏠 Organizador de Apartamentos</h1>
+                <div class="header-actions">
+                    <button class="btn-add" onclick="openAddModal()">➕ Adicionar Apartamento</button>
+                    <button class="btn-export" onclick="exportData()">📤 Exportar Backup</button>
+                    <button class="btn-import" onclick="document.getElementById('importFile').click()">📥 Importar Backup</button>
+                    <input type="file" id="importFile" accept=".json" style="display:none" onchange="importData(event)">
+                </div>
+            </div>
+
+            <div class="filters">
+                <div class="filter-group">
+                    <label class="filter-label">Quartos</label>
+                    <select id="filterQuartos" class="filter-select" onchange="applyFilters()">
+                        <option value="">Todos</option>
+                        <option value="0">0 quartos</option>
+                        <option value="1">1 quarto</option>
+                        <option value="2">2 quartos</option>
+                        <option value="3">3 quartos</option>
+                        <option value="4">4+ quartos</option>
+                    </select>
+                </div>
+
+                <div class="filter-group">
+                    <label class="filter-label">Banheiros</label>
+                    <select id="filterBanheiros" class="filter-select" onchange="applyFilters()">
+                        <option value="">Todos</option>
+                        <option value="1">1 banheiro</option>
+                        <option value="2">2 banheiros</option>
+                        <option value="3">3+ banheiros</option>
+                    </select>
+                </div>
+
+                <div class="filter-group">
+                    <label class="filter-label">Classificação</label>
+                    <div class="filter-buttons">
+                        <button class="filter-btn" data-stars="5" onclick="toggleStarFilter(5)">⭐ 5</button>
+                        <button class="filter-btn" data-stars="4" onclick="toggleStarFilter(4)">⭐ 4</button>
+                        <button class="filter-btn" data-stars="3" onclick="toggleStarFilter(3)">⭐ 3</button>
+                        <button class="filter-btn" data-stars="2" onclick="toggleStarFilter(2)">⭐ 2</button>
+                        <button class="filter-btn" data-stars="1" onclick="toggleStarFilter(1)">⭐ 1</button>
+                    </div>
+                </div>
+
+                <div class="filter-group">
+                    <label class="filter-label">Status</label>
+                    <div class="filter-buttons">
+                        <button class="filter-btn" id="filterFavorito" onclick="toggleFilter('favorito')">⭐ Favoritos</button>
+                        <button class="filter-btn" id="filterVisitado" onclick="toggleFilter('visitado')">✅ Visitados</button>
+                        <button class="filter-btn" id="filterNaoVisitado" onclick="toggleFilter('naoVisitado')">❌ Não Visitados</button>
+                    </div>
+                </div>
+
+                <div class="filter-group" style="display: flex; align-items: flex-end;">
+                    <button class="clear-filters" onclick="clearFilters()">🔄 Limpar Filtros</button>
+                </div>
+            </div>
+        </header>
+
+        <div id="apartmentsContainer" class="apartments-grid"></div>
+    </div>
+
+    <!-- Modal de Cadastro/Edição -->
+    <div id="formModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title" id="formModalTitle">Adicionar Apartamento</h2>
+                <button class="close-btn" onclick="closeFormModal()">&times;</button>
+            </div>
+            <form id="apartmentForm">
+                <input type="hidden" id="apartmentId">
+                
+                <div class="form-group">
+                    <label>Nome</label>
+                    <input type="text" id="nome" placeholder="Ex: Apartamento Centro">
+                </div>
+
+                <div class="form-group">
+                    <label>Endereço</label>
+                    <input type="text" id="endereco" placeholder="Rua, número, bairro">
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Quartos</label>
+                        <input type="number" id="quartos" min="0" placeholder="0">
+                    </div>
+                    <div class="form-group">
+                        <label>Banheiros</label>
+                        <input type="number" id="banheiros" min="0" placeholder="0">
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Valor do Aluguel</label>
+                        <input type="text" id="aluguel" placeholder="R$ 0,00">
+                    </div>
+                    <div class="form-group">
+                        <label>Condomínio</label>
+                        <input type="text" id="condominio" placeholder="R$ 0,00 ou 'Incluso'">
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>Observações</label>
+                    <textarea id="obs" placeholder="Anotações sobre o apartamento..."></textarea>
+                </div>
+
+                <div class="form-group">
+                    <label>Link da Imagem</label>
+                    <input type="url" id="link" placeholder="https://...">
+                </div>
+
+                <div class="form-group">
+                    <label>Link do Anúncio</label>
+                    <input type="url" id="linkAnuncio" placeholder="https://... (link do Facebook, OLX, etc)">
+                </div>
+
+                <div class="form-group">
+                    <label>Upload de Imagem</label>
+                    <input type="file" id="imageUpload" accept="image/*" onchange="previewImage(event)">
+                    <img id="imagePreview" class="image-upload-preview" style="display:none;">
+                </div>
+
+                <div class="modal-actions">
+                    <button type="button" class="btn-cancel" onclick="closeFormModal()">Cancelar</button>
+                    <button type="submit">Salvar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal de Detalhes -->
+    <div id="detailModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title" id="detailTitle">Detalhes</h2>
+                <button class="close-btn" onclick="closeDetailModal()">&times;</button>
+            </div>
+            
+            <img id="detailMainImage" class="detail-main-image" style="display:none;">
+            
+            <div id="detailImagesContainer" class="detail-images"></div>
+
+            <div class="detail-icons">
+                <button class="btn-toggle" id="detailFavoriteBtn" onclick="toggleFavorite()">
+                    <span id="detailFavoriteIcon">⭐</span>
+                    <span>Favorito</span>
+                </button>
+                <button class="btn-toggle" id="detailVisitedBtn" onclick="toggleVisited()">
+                    <span id="detailVisitedIcon">✅</span>
+                    <span>Visitado</span>
+                </button>
+            </div>
+
+            <div class="detail-info">
+                <div class="detail-label">Classificação:</div>
+                <div class="stars" id="detailStars"></div>
+            </div>
+
+            <div class="detail-info">
+                <div class="detail-label">Endereço:</div>
+                <div class="detail-value" id="detailEndereco">-</div>
+            </div>
+
+            <div class="detail-info">
+                <div class="detail-label">Quartos / Banheiros:</div>
+                <div class="detail-value" id="detailQuartosBanheiros">-</div>
+            </div>
+
+            <div class="detail-info">
+                <div class="detail-label">Aluguel:</div>
+                <div class="detail-value" id="detailAluguel">-</div>
+            </div>
+
+            <div class="detail-info">
+                <div class="detail-label">Condomínio:</div>
+                <div class="detail-value" id="detailCondominio">-</div>
+            </div>
+
+            <div class="detail-info">
+                <div class="detail-label">Observações:</div>
+                <div class="detail-value" id="detailObs">-</div>
+            </div>
+
+            <div class="detail-info" id="detailLinkAnuncioContainer" style="display:none;">
+                <div class="detail-label">Link do Anúncio:</div>
+                <div class="detail-value">
+                    <a id="detailLinkAnuncio" class="detail-link" href="#" target="_blank">🔗 Abrir Anúncio</a>
+                </div>
+            </div>
+
+            <div class="modal-actions">
+                <button onclick="editApartment()">✏️ Editar</button>
+                <button class="btn-delete" onclick="deleteApartment()">🗑️ Excluir</button>
+                <button class="btn-cancel" onclick="closeDetailModal()">Fechar</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let apartments = [];
+        let currentApartmentId = null;
+        let activeFilters = {
+            quartos: '',
+            banheiros: '',
+            stars: [],
+            favorito: false,
+            visitado: false,
+            naoVisitado: false
+        };
+
+        // Carregar dados do localStorage ao iniciar
+        function loadData() {
+            const data = localStorage.getItem('apartments');
+            if (data) {
+                apartments = JSON.parse(data);
+            }
+            renderApartments();
+        }
+
+        // Salvar dados no localStorage
+        function saveData() {
+            localStorage.setItem('apartments', JSON.stringify(apartments));
+        }
+
+        // Renderizar apartamentos na tela
+        function renderApartments() {
+            const container = document.getElementById('apartmentsContainer');
+            
+            // Aplicar filtros
+            let filtered = apartments.filter(apt => {
+                // Filtro de quartos
+                if (activeFilters.quartos) {
+                    const quartos = parseInt(apt.quartos) || 0;
+                    const filterQuartos = parseInt(activeFilters.quartos);
+                    if (filterQuartos === 4) {
+                        if (quartos < 4) return false;
+                    } else {
+                        if (quartos !== filterQuartos) return false;
+                    }
+                }
+
+                // Filtro de banheiros
+                if (activeFilters.banheiros) {
+                    const banheiros = parseInt(apt.banheiros) || 0;
+                    const filterBanheiros = parseInt(activeFilters.banheiros);
+                    if (filterBanheiros === 3) {
+                        if (banheiros < 3) return false;
+                    } else {
+                        if (banheiros !== filterBanheiros) return false;
+                    }
+                }
+
+                // Filtro de estrelas
+                if (activeFilters.stars.length > 0) {
+                    if (!activeFilters.stars.includes(apt.estrela || 0)) return false;
+                }
+
+                // Filtro de favorito
+                if (activeFilters.favorito && !apt.favorito) return false;
+
+                // Filtro de visitado
+                if (activeFilters.visitado && !apt.visitado) return false;
+
+                // Filtro de não visitado
+                if (activeFilters.naoVisitado && apt.visitado) return false;
+
+                return true;
+            });
+            
+            if (filtered.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-state-icon">🔍</div>
+                        <h2>Nenhum apartamento encontrado</h2>
+                        <p>Tente ajustar os filtros ou adicione novos apartamentos</p>
+                    </div>
+                `;
+                return;
+            }
+
+            container.innerHTML = filtered.map(apt => {
+                const imageUrl = apt.image || apt.link;
+                const imageHtml = imageUrl 
+                    ? `<img src="${imageUrl}" class="card-image" alt="${apt.nome}">`
+                    : `<div class="card-image">🏠</div>`;
+
+                const stars = Array.from({length: 5}, (_, i) => 
+                    `<span class="star ${i < (apt.estrela || 0) ? 'filled' : ''}">★</span>`
+                ).join('');
+
+                return `
+                    <div class="apartment-card" onclick="openDetailModal('${apt.id}')">
+                        ${imageHtml}
+                        <div class="card-content">
+                            <div class="card-title">${apt.nome || 'Sem nome'}</div>
+                            <div class="card-address">${apt.endereco || 'Endereço não informado'}</div>
+                            <div class="card-info">
+                                <span>🛏️ ${apt.quartos || 0} quartos</span>
+                                <span>🚿 ${apt.banheiros || 0} banheiros</span>
+                            </div>
+                            <div class="card-price">
+                                💰 ${apt.aluguel || 'Valor não informado'}
+                            </div>
+                            ${apt.condominio ? `<div style="font-size:13px;color:#7f8c8d">Condomínio: ${apt.condominio}</div>` : ''}
+                            <div class="card-icons">
+                                ${apt.favorito ? '<span class="icon icon-favorite">⭐</span>' : ''}
+                                ${apt.visitado ? '<span class="icon icon-visited">✅</span>' : ''}
+                            </div>
+                            <div class="stars">${stars}</div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        // Abrir modal de adicionar
+        function openAddModal() {
+            document.getElementById('formModalTitle').textContent = 'Adicionar Apartamento';
+            document.getElementById('apartmentForm').reset();
+            document.getElementById('apartmentId').value = '';
+            document.getElementById('imagePreview').style.display = 'none';
+            document.getElementById('formModal').classList.add('active');
+        }
+
+        // Fechar modal de formulário
+        function closeFormModal() {
+            document.getElementById('formModal').classList.remove('active');
+        }
+
+        // Preview da imagem
+        function previewImage(e) {
+            const file = e.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(event) {
+                    const preview = document.getElementById('imagePreview');
+                    preview.src = event.target.result;
+                    preview.style.display = 'block';
+                };
+                reader.readAsDataURL(file);
+            }
+        }
+
+        // Submeter formulário
+        document.getElementById('apartmentForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const id = document.getElementById('apartmentId').value || Date.now().toString();
+            const imageFile = document.getElementById('imageUpload').files[0];
+            
+            const apartment = {
+                id: id,
+                nome: document.getElementById('nome').value,
+                endereco: document.getElementById('endereco').value,
+                quartos: document.getElementById('quartos').value,
+                banheiros: document.getElementById('banheiros').value,
+                aluguel: document.getElementById('aluguel').value,
+                condominio: document.getElementById('condominio').value,
+                obs: document.getElementById('obs').value,
+                link: document.getElementById('link').value,
+                linkAnuncio: document.getElementById('linkAnuncio').value,
+                image: '',
+                imagens: [],
+                favorito: false,
+                visitado: false,
+                estrela: 0
+            };
+
+            // Processar imagem se houver upload
+            if (imageFile) {
+                const reader = new FileReader();
+                reader.onload = function(event) {
+                    apartment.image = event.target.result;
+                    saveApartment(apartment);
+                };
+                reader.readAsDataURL(imageFile);
+            } else {
+                saveApartment(apartment);
+            }
+        });
+
+        function saveApartment(apartment) {
+            const index = apartments.findIndex(a => a.id === apartment.id);
+            
+            if (index >= 0) {
+                // Manter propriedades existentes ao editar
+                apartment.favorito = apartments[index].favorito;
+                apartment.visitado = apartments[index].visitado;
+                apartment.estrela = apartments[index].estrela;
+                apartment.imagens = apartments[index].imagens || [];
+                apartments[index] = apartment;
+            } else {
+                apartments.push(apartment);
+            }
+            
+            saveData();
+            renderApartments();
+            closeFormModal();
+        }
+
+        // Abrir modal de detalhes
+        function openDetailModal(id) {
+            currentApartmentId = id;
+            const apt = apartments.find(a => a.id === id);
+            if (!apt) return;
+
+            document.getElementById('detailTitle').textContent = apt.nome || 'Detalhes';
+            document.getElementById('detailEndereco').textContent = apt.endereco || '-';
+            document.getElementById('detailQuartosBanheiros').textContent = 
+                `${apt.quartos || 0} quartos / ${apt.banheiros || 0} banheiros`;
+            document.getElementById('detailAluguel').textContent = apt.aluguel || '-';
+            document.getElementById('detailCondominio').textContent = apt.condominio || '-';
+            document.getElementById('detailObs').textContent = apt.obs || '-';
+
+            // Link do anúncio
+            const linkAnuncioContainer = document.getElementById('detailLinkAnuncioContainer');
+            const linkAnuncio = document.getElementById('detailLinkAnuncio');
+            if (apt.linkAnuncio) {
+                linkAnuncio.href = apt.linkAnuncio;
+                linkAnuncioContainer.style.display = 'block';
+            } else {
+                linkAnuncioContainer.style.display = 'none';
+            }
+
+            // Imagem principal
+            const mainImage = document.getElementById('detailMainImage');
+            const imageUrl = apt.image || apt.link;
+            if (imageUrl) {
+                mainImage.src = imageUrl;
+                mainImage.style.display = 'block';
+            } else {
+                mainImage.style.display = 'none';
+            }
+
+            // Botões de favorito e visitado
+            const favBtn = document.getElementById('detailFavoriteBtn');
+            const visBtn = document.getElementById('detailVisitedBtn');
+            
+            if (apt.favorito) {
+                favBtn.classList.add('active-favorite');
+            } else {
+                favBtn.classList.remove('active-favorite');
+            }
+            
+            if (apt.visitado) {
+                visBtn.classList.add('active-visited');
+            } else {
+                visBtn.classList.remove('active-visited');
+            }
+
+            // Estrelas
+            renderDetailStars(apt.estrela || 0);
+
+            document.getElementById('detailModal').classList.add('active');
+        }
+
+        // Fechar modal de detalhes
+        function closeDetailModal() {
+            document.getElementById('detailModal').classList.remove('active');
+            currentApartmentId = null;
+        }
+
+        // Renderizar estrelas no modal de detalhes
+        function renderDetailStars(rating) {
+            const container = document.getElementById('detailStars');
+            container.innerHTML = Array.from({length: 5}, (_, i) => 
+                `<span class="star ${i < rating ? 'filled' : ''}" onclick="setRating(${i + 1})">★</span>`
+            ).join('');
+        }
+
+        // Definir classificação
+        function setRating(stars) {
+            const apt = apartments.find(a => a.id === currentApartmentId);
+            if (apt) {
+                apt.estrela = stars;
+                saveData();
+                renderDetailStars(stars);
+                renderApartments();
+            }
+        }
+
+        // Toggle favorito
+        function toggleFavorite() {
+            const apt = apartments.find(a => a.id === currentApartmentId);
+            if (apt) {
+                apt.favorito = !apt.favorito;
+                saveData();
+                
+                const btn = document.getElementById('detailFavoriteBtn');
+                if (apt.favorito) {
+                    btn.classList.add('active-favorite');
+                } else {
+                    btn.classList.remove('active-favorite');
+                }
+                
+                renderApartments();
+            }
+        }
+
+        // Toggle visitado
+        function toggleVisited() {
+            const apt = apartments.find(a => a.id === currentApartmentId);
+            if (apt) {
+                apt.visitado = !apt.visitado;
+                saveData();
+                
+                const btn = document.getElementById('detailVisitedBtn');
+                if (apt.visitado) {
+                    btn.classList.add('active-visited');
+                } else {
+                    btn.classList.remove('active-visited');
+                }
+                
+                renderApartments();
+            }
+        }
+
+        // Editar apartamento
+        function editApartment() {
+            const apt = apartments.find(a => a.id === currentApartmentId);
+            if (!apt) return;
+
+            closeDetailModal();
+
+            document.getElementById('formModalTitle').textContent = 'Editar Apartamento';
+            document.getElementById('apartmentId').value = apt.id;
+            document.getElementById('nome').value = apt.nome || '';
+            document.getElementById('endereco').value = apt.endereco || '';
+            document.getElementById('quartos').value = apt.quartos || '';
+            document.getElementById('banheiros').value = apt.banheiros || '';
+            document.getElementById('aluguel').value = apt.aluguel || '';
+            document.getElementById('condominio').value = apt.condominio || '';
+            document.getElementById('obs').value = apt.obs || '';
+            document.getElementById('link').value = apt.link || '';
+            document.getElementById('linkAnuncio').value = apt.linkAnuncio || '';
+
+            if (apt.image) {
+                document.getElementById('imagePreview').src = apt.image;
+                document.getElementById('imagePreview').style.display = 'block';
+            }
+
+            document.getElementById('formModal').classList.add('active');
+        }
+
+        // Excluir apartamento
+        function deleteApartment() {
+            if (confirm('Tem certeza que deseja excluir este apartamento?')) {
+                apartments = apartments.filter(a => a.id !== currentApartmentId);
+                saveData();
+                renderApartments();
+                closeDetailModal();
+            }
+        }
+
+        // Exportar dados
+        function exportData() {
+            const dataStr = JSON.stringify(apartments, null, 2);
+            const blob = new Blob([dataStr], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'apartamentos_backup.json';
+            a.click();
+            URL.revokeObjectURL(url);
+        }
+
+        // Importar dados
+        function importData(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function(event) {
+                try {
+                    const data = JSON.parse(event.target.result);
+                    if (Array.isArray(data)) {
+                        apartments = data;
+                        saveData();
+                        renderApartments();
+                        alert('Backup importado com sucesso!');
+                    } else {
+                        alert('Arquivo inválido!');
+                    }
+                } catch (error) {
+                    alert('Erro ao importar arquivo!');
+                }
+            };
+            reader.readAsText(file);
+            e.target.value = '';
+        }
+
+        // Filtros
+        function applyFilters() {
+            activeFilters.quartos = document.getElementById('filterQuartos').value;
+            activeFilters.banheiros = document.getElementById('filterBanheiros').value;
+            renderApartments();
+        }
+
+        function toggleStarFilter(stars) {
+            const btn = document.querySelector(`[data-stars="${stars}"]`);
+            const index = activeFilters.stars.indexOf(stars);
+            
+            if (index > -1) {
+                activeFilters.stars.splice(index, 1);
+                btn.classList.remove('active');
+            } else {
+                activeFilters.stars.push(stars);
+                btn.classList.add('active');
+            }
+            
+            renderApartments();
+        }
+
+        function toggleFilter(type) {
+            const btn = document.getElementById('filter' + type.charAt(0).toUpperCase() + type.slice(1));
+            activeFilters[type] = !activeFilters[type];
+            
+            if (activeFilters[type]) {
+                btn.classList.add('active');
+            } else {
+                btn.classList.remove('active');
+            }
+            
+            renderApartments();
+        }
+
+        function clearFilters() {
+            activeFilters = {
+                quartos: '',
+                banheiros: '',
+                stars: [],
+                favorito: false,
+                visitado: false,
+                naoVisitado: false
+            };
+            
+            document.getElementById('filterQuartos').value = '';
+            document.getElementById('filterBanheiros').value = '';
+            
+            document.querySelectorAll('.filter-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            
+            renderApartments();
+        }
+
+        // Inicializar
+        loadData();
+    </script>
+</body>
+</html>
