@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Detalhes do Apartamento</title>
+<style>
+    body { font-family: Arial, sans-serif; margin: 20px; background-color: #f0f2f5; }
+    .container { max-width: 800px; margin: auto; background: #fff; padding: 20px; border-radius: 10px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
+    h1 { text-align: center; }
+    img { width: 100%; border-radius: 8px; margin-bottom: 10px; }
+    .actions { display: flex; justify-content: center; gap: 10px; flex-wrap: wrap; margin-top: 10px; }
+    button { padding: 8px 12px; cursor: pointer; }
+    .stars { color: gold; cursor: pointer; font-size: 22px; }
+    .favorito { color: #f4c542; }
+    .visitado { color: #4caf50; }
+    .icons { display: flex; gap: 8px; justify-content: center; margin-bottom: 15px; }
+    .gallery { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 10px; }
+    .gallery img { height: 150px; object-fit: cover; }
+</style>
+</head>
+<body>
+<div class="container">
+    <h1 id="titulo"></h1>
+    <div class="icons" id="icons"></div>
+    <div id="galeria" class="gallery"></div>
+
+    <p><strong>Endereço:</strong> <span id="endereco"></span></p>
+    <p><strong>Quartos:</strong> <span id="quartos"></span> | <strong>Banheiros:</strong> <span id="banheiros"></span></p>
+    <p><strong>Aluguel:</strong> R$ <span id="aluguel"></span> | <strong>Condomínio:</strong> <span id="condominio"></span></p>
+    <p><strong>Observações:</strong> <span id="obs"></span></p>
+
+    <div style="text-align:center; margin-top:10px;">
+        <div id="stars"></div>
+    </div>
+
+    <div class="actions">
+        <button onclick="toggleFavorito()">Favorito</button>
+        <button onclick="toggleVisitado()">Visitado</button>
+        <button onclick="openEdit()">Editar</button>
+        <button onclick="deleteApartamento()">Excluir</button>
+        <button onclick="voltar()">Voltar</button>
+    </div>
+
+    <div style="margin-top:15px;">
+        <h3>Adicionar imagens:</h3>
+        <input type="file" id="uploadImagem" accept="image/*" multiple>
+        <input type="text" id="linkImagem" placeholder="Link de imagem (opcional)">
+        <button onclick="addImagem()">Adicionar</button>
+    </div>
+</div>
+
+<script>
+let apartamentos = JSON.parse(localStorage.getItem('apartamentos')) || [];
+const params = new URLSearchParams(window.location.search);
+const id = parseInt(params.get('id'));
+let apto = apartamentos.find(a=>a.id===id);
+
+function save(){ localStorage.setItem('apartamentos', JSON.stringify(apartamentos)); }
+function voltar(){ window.location.href='index.html'; }
+
+function render(){
+    if(!apto) return;
+    document.getElementById('titulo').innerText = apto.nome || 'Apartamento';
+    document.getElementById('endereco').innerText = apto.endereco || '';
+    document.getElementById('quartos').innerText = apto.quartos || '';
+    document.getElementById('banheiros').innerText = apto.banheiros || '';
+    document.getElementById('aluguel').innerText = apto.aluguel || '';
+    document.getElementById('condominio').innerText = apto.condominio || '';
+    document.getElementById('obs').innerText = apto.obs || '';
+
+    let ic = '';
+    if(apto.favorito) ic += '<span class="favorito">⭐</span>';
+    if(apto.visitado) ic += '<span class="visitado">✅</span>';
+    document.getElementById('icons').innerHTML = ic;
+
+    renderStars();
+    renderGaleria();
+}
+
+function renderStars(){
+    let starsHtml='';
+    for(let i=1;i<=5;i++){
+        starsHtml += `<span class='stars' onclick='setStar(${i})'>${i<=apto.estrela?'★':'☆'}</span>`;
+    }
+    document.getElementById('stars').innerHTML = starsHtml;
+}
+
+function setStar(star){
+    apto.estrela = star;
+    save();
+    renderStars();
+}
+
+function toggleFavorito(){
+    apto.favorito = !apto.favorito;
+    save();
+    render();
+}
+
+function toggleVisitado(){
+    apto.visitado = !apto.visitado;
+    save();
+    render();
+}
+
+function openEdit(){
+    localStorage.setItem('editando', id);
+    window.location.href='index.html';
+}
+
+function deleteApartamento(){
+    if(confirm('Deseja realmente excluir este apartamento?')){
+        apartamentos = apartamentos.filter(a=>a.id!==id);
+        save();
+        voltar();
+    }
+}
+
+function renderGaleria(){
+    const gal = document.getElementById('galeria');
+    gal.innerHTML='';
+    if(apto.imagens && apto.imagens.length){
+        apto.imagens.forEach(img=>{
+            const i = document.createElement('img');
+            i.src=img;
+            gal.appendChild(i);
+        });
+    } else if(apto.image){
+        gal.innerHTML = `<img src='${apto.image}'>`;
+    } else if(apto.link){
+        gal.innerHTML = `<img src='${apto.link}'>`;
+    } else {
+        gal.innerHTML = '<p style="text-align:center;color:#777;">Nenhuma imagem disponível</p>';
+    }
+}
+
+function addImagem(){
+    if(!apto.imagens) apto.imagens=[];
+    const arquivos = document.getElementById('uploadImagem').files;
+    const link = document.getElementById('linkImagem').value;
+
+    if(link){
+        apto.imagens.push(link);
+        document.getElementById('linkImagem').value='';
+        save();
+        renderGaleria();
+    }
+
+    if(arquivos.length){
+        Array.from(arquivos).forEach(arq=>{
+            const reader = new FileReader();
+            reader.onload = ()=>{
+                apto.imagens.push(reader.result);
+                save();
+                renderGaleria();
+            };
+            reader.readAsDataURL(arq);
+        });
+        document.getElementById('uploadImagem').value='';
+    }
+}
+
+render();
+</script>
+</body>
+</html>

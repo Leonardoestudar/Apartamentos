@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Organizador de Apartamentos</title>
+<style>
+    body { font-family: Arial, sans-serif; margin: 20px; background-color: #f4f4f4; }
+    h1 { text-align: center; }
+    button { margin: 5px; padding: 8px 12px; cursor: pointer; }
+    .filters { margin-bottom: 20px; display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; }
+    input, select { padding: 5px; }
+    .container { display: flex; flex-wrap: wrap; gap: 20px; justify-content: center; }
+    .card { background-color: #fff; padding: 15px; border-radius: 10px; width: 300px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); position: relative; display: flex; flex-direction: column; }
+    .card img { width: 100%; height: 180px; object-fit: cover; border-radius: 8px; margin-bottom: 10px; }
+    .card-list { width: 100%; display: flex; flex-direction: column; gap: 10px; }
+    .list-item { background-color: #fff; padding: 10px; border-radius: 8px; display: flex; align-items: center; justify-content: space-between; box-shadow: 0 1px 5px rgba(0,0,0,0.1); }
+    .stars { color: gold; cursor: pointer; }
+    .toggle-view { margin-bottom: 20px; }
+    .visited { border: 2px solid green; }
+    .favorite { border: 2px solid orange; }
+    .hidden { display: none; }
+</style>
+</head>
+<body>
+
+<h1>Organizador de Apartamentos</h1>
+
+<div class="filters">
+    <input type="text" id="search" placeholder="Buscar...">
+    <select id="filterQuartos"><option value="">Quartos</option><option value="1">1</option><option value="2">2</option><option value="3">3+</option></select>
+    <select id="filterBanheiros"><option value="">Banheiros</option><option value="1">1</option><option value="2">2</option><option value="3+">3+</option></select>
+    <select id="filterEstrelas"><option value="">Estrelas</option><option value="5">5</option><option value="4">4</option><option value="3">3</option><option value="2">2</option><option value="1">1</option></select>
+    <button onclick="sortBy('preco')">Ordenar por Preço</button>
+    <button onclick="sortBy('estrela')">Ordenar por Potencial</button>
+</div>
+
+<div class="toggle-view">
+    <button onclick="toggleView()">Alternar Cards / Lista</button>
+    <button onclick="addApartamento()">Adicionar Apartamento</button>
+</div>
+
+<div id="apartamentosContainer" class="container"></div>
+
+<script>
+let apartamentos = JSON.parse(localStorage.getItem('apartamentos')) || [];
+let isCardView = true;
+
+function save() {
+    localStorage.setItem('apartamentos', JSON.stringify(apartamentos));
+}
+
+function addApartamento() {
+    const nome = prompt('Nome do apartamento:');
+    if(!nome) return;
+    const endereco = prompt('Endereço:');
+    const quartos = prompt('Número de quartos:');
+    const banheiros = prompt('Número de banheiros:');
+    const aluguel = prompt('Valor do aluguel:');
+    let condominio = confirm('O valor do condomínio está incluso?');
+    let valorCondominio = 0;
+    if(!condominio) {
+        valorCondominio = prompt('Insira o valor do condomínio:');
+    }
+    const obs = prompt('Observações:');
+    const link = prompt('Link do Facebook ou URL da imagem (opcional):');
+
+    const apartamento = {
+        id: Date.now(),
+        nome, endereco, quartos, banheiros, aluguel, condominio: condominio ? 'Incluso' : valorCondominio,
+        obs, link, image: '',
+        visitado: false,
+        favorito: false,
+        estrela: 0
+    };
+
+    apartamentos.push(apartamento);
+    save();
+    render();
+}
+
+function render() {
+    const container = document.getElementById('apartamentosContainer');
+    container.innerHTML = '';
+
+    let filtered = apartamentos.filter(a => {
+        const search = document.getElementById('search').value.toLowerCase();
+        const fQ = document.getElementById('filterQuartos').value;
+        const fB = document.getElementById('filterBanheiros').value;
+        const fE = document.getElementById('filterEstrelas').value;
+
+        let match = a.nome.toLowerCase().includes(search) || a.endereco.toLowerCase().includes(search);
+        if(fQ) match = match && (fQ==='3+' ? a.quartos>=3 : a.quartos==fQ);
+        if(fB) match = match && (fB==='3+' ? a.banheiros>=3 : a.banheiros==fB);
+        if(fE) match = match && a.estrela==fE;
+        return match;
+    });
+
+    if(isCardView) {
+        container.className = 'container';
+        filtered.forEach(a => {
+            const card = document.createElement('div');
+            card.className = 'card';
+            if(a.visitado) card.classList.add('visited');
+            if(a.favorito) card.classList.add('favorite');
+            
+            let imgHtml = '';
+            if(a.image) imgHtml = `<img src='${a.image}' alt='Apartamento'>`;
+            else if(a.link) imgHtml = `<img src='${a.link}' alt='Apartamento'>`;
+
+            card.innerHTML = `${imgHtml}
+                <h3>${a.nome}</h3>
+                <p>${a.endereco}</p>
+                <p>${a.quartos} quartos / ${a.banheiros} banheiros</p>
+                <p>Aluguel: R$ ${a.aluguel} | Condomínio: ${a.condominio}</p>
+                <p>${a.obs || ''}</p>
+                <p>${renderStars(a)}</p>
+                <button onclick='toggleVisitado(${a.id})'>Visitado</button>
+                <button onclick='toggleFavorito(${a.id})'>Favorito</button>
+                <button onclick='uploadImage(${a.id})'>Upload Imagem</button>`;
+            container.appendChild(card);
+        });
+    } else {
+        container.className = 'card-list';
+        filtered.forEach(a => {
+            const item = document.createElement('div');
+            item.className = 'list-item';
+            item.innerHTML = `${a.nome} - ${a.endereco} | ${a.quartos} quartos / ${a.banheiros} banheiros | Aluguel: R$ ${a.aluguel} | Estrelas: ${a.estrela}`;
+            container.appendChild(item);
+        });
+    }
+}
+
+function renderStars(a) {
+    let starsHtml = '';
+    for(let i=1;i<=5;i++) {
+        starsHtml += `<span class='stars' onclick='setStar(${a.id}, ${i})'>${i<=a.estrela?'★':'☆'}</span>`;
+    }
+    return starsHtml;
+}
+
+function setStar(id, star) {
+    const apt = apartamentos.find(a=>a.id==id);
+    apt.estrela = star;
+    save();
+    render();
+}
+
+function toggleVisitado(id) {
+    const apt = apartamentos.find(a=>a.id==id);
+    apt.visitado = !apt.visitado;
+    save();
+    render();
+}
+
+function toggleFavorito(id) {
+    const apt = apartamentos.find(a=>a.id==id);
+    apt.favorito = !apt.favorito;
+    save();
+    render();
+}
+
+function uploadImage(id) {
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = 'image/*';
+    input.onchange = e => {
+        const file = e.target.files[0];
+        const reader = new FileReader();
+        reader.onload = () => {
+            const apt = apartamentos.find(a=>a.id==id);
+            apt.image = reader.result;
+            save();
+            render();
+        };
+        reader.readAsDataURL(file);
+    };
+    input.click();
+}
+
+function toggleView() {
+    isCardView = !isCardView;
+    render();
+}
+
+function sortBy(criteria) {
+    if(criteria==='preco') {
+        apartamentos.sort((a,b)=>a.aluguel-b.aluguel);
+    } else if(criteria==='estrela') {
+        apartamentos.sort((a,b)=>b.estrela-a.estrela);
+    }
+    render();
+}
+
+document.getElementById('search').addEventListener('input', render);
+document.getElementById('filterQuartos').addEventListener('change', render);
+document.getElementById('filterBanheiros').addEventListener('change', render);
+document.getElementById('filterEstrelas').addEventListener('change', render);
+
+render();
+</script>
+
+</body>
+</html>
